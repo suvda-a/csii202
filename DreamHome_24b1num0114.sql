@@ -178,24 +178,6 @@ create table LeaseAgreement(
 
 
 
--- Create the trigger function to calculate DepositAmount
-create or replace function set_default_deposit_amount() 
-returns trigger as $$
-begin
-  -- Set DepositAmount to 2 * Rent if it's NULL
-  if new.DepositAmount is null then
-    new.DepositAmount := new.Rent * 2;
-  end if;
-  return new;
-end;
-$$ language plpgsql;
-
--- Create the trigger to call the function on insert
-create trigger before_insert_leaseagreement
-before insert on LeaseAgreement
-for each row
-execute function set_default_deposit_amount();
-
 create table Renter(
 	RenterNo varchar(5) not null
 		check (RenterNo ~ '^CR[1-9][0-9]{0,2}$'), 
@@ -230,23 +212,6 @@ create table Viewing(
 		on update CASCADE
 );
 
---the reason for the alterations are so that they could be referred before the table made
-alter table Branch
-	add foreign key (ManagerStaffNo) references Staff(StaffNo)
-		on delete set null
-		on update CASCADE;
-alter table LeaseAgreement
-	add foreign key (RenterNo) references Renter (RenterNo) 
-		on delete no action 
-		on update CASCADE;
-alter table PropertyForRent
-	add foreign key (OwnerNo) references PrivateOwner(PrivateOwnerNo) 
-		on delete no action 
-		on update CASCADE,    
-	add foreign key (OwnerNo) references BusinessOwner(BusinessOwnerNo) 
-    	on delete no action
-		on update CASCADE;
-
 -- Properties should be inspected at least once over a six month period.
 create table Inspection(
 	PropertyNo varchar(5) not null, 
@@ -263,3 +228,21 @@ create table Inspection(
 		on delete set null 
 		on update CASCADE
 );
+
+
+--the reason for the alterations are so that they could be referred before the table made
+alter table Branch
+	add foreign key (ManagerStaffNo) references Staff(StaffNo)
+		on delete set null
+		on update CASCADE;
+alter table LeaseAgreement
+	add foreign key (RenterNo) references Renter (RenterNo) 
+		on delete no action 
+		on update CASCADE;
+alter table PropertyForRent
+	add foreign key (OwnerNo) references PrivateOwner(PrivateOwnerNo) 
+		on delete no action 
+		on update CASCADE,
+	add foreign key (OwnerNo) references BusinessOwner(BusinessOwnerNo) 
+  	on delete no action
+		on update CASCADE;
